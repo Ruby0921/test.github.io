@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>阅读乐园｜我的家人</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#35baf0}
+body{font-family:"Microsoft YaHei","Noto Sans SC",Arial,sans-serif}
+.screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#35baf0}
+.screen.active{display:flex}
+.canvas{position:relative;width:min(100vw,150vh);height:min(100vh,66.6666667vw);max-width:100vw;max-height:100vh;aspect-ratio:3/2;flex:none}
+.canvas img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none}
+.hit{position:absolute;border:0;background:transparent;padding:0;margin:0;cursor:pointer;z-index:10;touch-action:manipulation}
+.hit:focus-visible{outline:4px solid rgba(255,255,255,.95);outline-offset:2px;border-radius:24px}
+/* 1：首页只允许点击中央“开始学习”按钮。
+   首页原图 1280×853；按钮约位于 x=495~850、y=592~682。
+   缩小点击热区，避免覆盖“我的书架 / 星星奖励 / 趣味游戏 / 学习记录 / 家长中心”。 */
+#homeStart{left:38.5%;top:69.4%;width:28%;height:10.8%;}
+/* 第二张图左上角“返回首页”按钮 */
+#coverHome{left:0.5%;top:1%;width:17%;height:10%;}
+#coverStart{left:25%;top:73%;width:50%;height:22%;}
+/* 1.1.1：左上角“返回首页”按钮，原先漏了点击热区，导致按钮没有反应 */
+#menuHome{left:0.8%;top:1.2%;width:14%;height:10.5%;}
+#menuLesson1{left:8%;top:31%;width:27%;height:29%;}
+
+/* 第1步：认识生字选字页与单字页，全部使用原图，不重新排版图片 */
+#wordSelectHome{left:0.5%;top:1%;width:14%;height:11%;}
+#wordThis{left:5%;top:39%;width:6%;height:9%;}
+#wordDetailBack{left:0.5%;top:1%;width:14%;height:11%;}
+
+/* 1.1.1.1：点击左侧“家”进入 1.1.1.2 */
+#wordJia{left:9.3%;top:40.3%;width:5.4%;height:7.2%;}
+#wordRenFromZhe{left:15.0%;top:39.5%;width:6.5%;height:8.5%;}
+#wordRenFromJia{left:15.0%;top:39.5%;width:6.5%;height:8.5%;}
+#wordZheFromRen{left:4.5%;top:39.5%;width:7.5%;height:8.5%;}
+#wordJiaFromRen{left:9.0%;top:39.5%;width:6.5%;height:8.5%;}
+
+/* 1.1.1.2：家字页面互动 */
+#wordPlayJia{left:48%;top:16%;width:14%;height:15%;z-index:9999;pointer-events:auto;}
+#wordListenJia{left:33%;top:80%;width:34%;height:19%;z-index:9999;pointer-events:auto;}
+#wordSpeedJia{
+  position:absolute;
+  left:43.5%;
+  top:73.8%;
+  width:27.5%;
+  height:7%;
+  z-index:200;
+  opacity:1;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  background:transparent;
+  border:0;
+  margin:0;
+  padding:0;
+}
+#wordSpeedJia::-webkit-slider-runnable-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedJia::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:38px;
+  height:38px;
+  margin-top:-15px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedJia:active::-webkit-slider-thumb{cursor:grabbing;}
+#wordSpeedJia::-moz-range-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedJia::-moz-range-thumb{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedJia:active::-moz-range-thumb{cursor:grabbing;}
+
+/* 1.1.1.2 左上角返回 1.1.1.1 */
+#wordHomeBack{left:0.5%;top:1%;width:14%;height:11%;}
+#wordZheFromJia{left:4.5%;top:39.5%;width:7.5%;height:8.5%;}
+/* 1.1.1.1「这」字页面的朗读热区：不改变原图，只增加透明点击层 */
+#wordPlayZhe{left:51.0%;top:19.0%;width:7.5%;height:8.5%;}
+#wordListenZhe{left:38.0%;top:84.0%;width:24.0%;height:12.0%;}
+#wordSpeedZhe{
+  position:absolute;
+  left:43.5%;
+  top:73.8%;
+  width:27.5%;
+  height:7%;
+  z-index:200;
+  opacity:1;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  background:transparent;
+  border:0;
+  margin:0;
+  padding:0;
+}
+#wordSpeedZhe::-webkit-slider-runnable-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedZhe::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:38px;
+  height:38px;
+  margin-top:-15px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedZhe:active::-webkit-slider-thumb{cursor:grabbing;}
+#wordSpeedZhe::-moz-range-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedZhe::-moz-range-thumb{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedZhe:active::-moz-range-thumb{cursor:grabbing;}
+
+#wordSpeedKnob{
+  position:absolute !important;
+  left:53.5% !important;
+  top:74.9% !important;
+  width:3.0% !important;
+  height:auto !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:150 !important;
+  pointer-events:none !important;
+  user-select:none !important;
+  -webkit-user-drag:none !important;
+  transform:translateX(-50%) !important;
+}
+
+
+/* 1.1.1.3「人」字页面：与“这”页面完全相同的播放、听一听和可拖动语速 */
+#wordPlayRen{left:51.0%;top:19.0%;width:7.5%;height:8.5%;}
+#wordListenRen{left:38.0%;top:84.0%;width:24.0%;height:12.0%;}
+#wordSpeedRen{
+  position:absolute;
+  left:43.5%;
+  top:73.8%;
+  width:27.5%;
+  height:7%;
+  z-index:200;
+  opacity:1;
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  background:transparent;
+  border:0;
+  margin:0;
+  padding:0;
+}
+#wordSpeedRen::-webkit-slider-runnable-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedRen::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:38px;
+  height:38px;
+  margin-top:-15px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedRen:active::-webkit-slider-thumb{cursor:grabbing;}
+#wordSpeedRen::-moz-range-track{
+  height:8px;
+  background:transparent;
+  border:0;
+}
+#wordSpeedRen::-moz-range-thumb{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:3px solid #0b75e8;
+  background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  cursor:grab;
+}
+#wordSpeedRen:active::-moz-range-thumb{cursor:grabbing;}
+
+#wordSpeedKnob{
+  position:absolute !important;
+  left:53.5% !important;
+  top:74.9% !important;
+  width:3.0% !important;
+  height:auto !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  z-index:150 !important;
+  pointer-events:none !important;
+  user-select:none !important;
+  -webkit-user-drag:none !important;
+  transform:translateX(-50%) !important;
+}
+
+
+/* 1.1.1.4「爷」字页面：完全沿用已有生字页面的互动方式 */
+#wordPlayYe{left:51.0%;top:19.0%;width:7.5%;height:8.5%;}
+#wordListenYe{left:38.0%;top:84.0%;width:24.0%;height:12.0%;}
+#wordSpeedYe{
+  position:absolute;left:43.5%;top:73.8%;width:27.5%;height:7%;
+  z-index:200;opacity:1;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background:transparent;border:0;margin:0;padding:0;
+}
+#wordSpeedYe::-webkit-slider-runnable-track{height:8px;background:transparent;border:0;}
+#wordSpeedYe::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:38px;height:38px;margin-top:-15px;
+  border-radius:50%;border:3px solid #0b75e8;background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);cursor:grab;
+}
+#wordSpeedYe:active::-webkit-slider-thumb{cursor:grabbing;}
+#wordSpeedYe::-moz-range-track{height:8px;background:transparent;border:0;}
+#wordSpeedYe::-moz-range-thumb{
+  width:38px;height:38px;border-radius:50%;border:3px solid #0b75e8;background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);cursor:grab;
+}
+#wordSpeedYe:active::-moz-range-thumb{cursor:grabbing;}
+
+#wordYeFromZhe,#wordYeFromJia,#wordYeFromRen,#wordYeFromYe{
+  left:22.6%;top:39.5%;width:6.5%;height:8.5%;
+}
+#wordZheFromYe{left:4.5%;top:39.5%;width:7.5%;height:8.5%;}
+#wordJiaFromYe{left:9.0%;top:39.5%;width:6.5%;height:8.5%;}
+#wordRenFromYe{left:15.0%;top:39.5%;width:6.5%;height:8.5%;}
+
+/* 1.1.1.5「奶」 */
+#wordPlayNai{left:51.0%;top:19.0%;width:7.5%;height:8.5%;}
+#wordListenNai{left:38.0%;top:84.0%;width:24.0%;height:12.0%;}
+#wordSpeedNai{
+  position:absolute;left:43.5%;top:73.8%;width:27.5%;height:7%;
+  z-index:200;opacity:1;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background:transparent;border:0;margin:0;padding:0;
+}
+#wordSpeedNai::-webkit-slider-runnable-track{height:8px;background:transparent;border:0;}
+#wordSpeedNai::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:38px;height:38px;margin-top:-15px;
+  border-radius:50%;border:3px solid #0b75e8;background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);cursor:grab;
+}
+#wordSpeedNai:active::-webkit-slider-thumb{cursor:grabbing;}
+#wordSpeedNai::-moz-range-track{height:8px;background:transparent;border:0;}
+#wordSpeedNai::-moz-range-thumb{
+  width:38px;height:38px;border-radius:50%;border:3px solid #0b75e8;background:#1789f5;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);cursor:grab;
+}
+#wordSpeedNai:active::-moz-range-thumb{cursor:grabbing;}
+
+/* 左侧「奶」点击区域：对应本课生字表第二行第一格 */
+#wordNaiFromZhe,#wordNaiFromJia,#wordNaiFromRen,#wordNaiFromYe{
+  left:4.5%;top:50.0%;width:6.5%;height:8.5%;
+}
+
+/* 「奶」页可切换回已完成生字 */
+#wordZheFromNai{left:4.5%;top:39.5%;width:7.5%;height:8.5%;}
+#wordJiaFromNai{left:9.0%;top:39.5%;width:6.5%;height:8.5%;}
+#wordRenFromNai{left:15.0%;top:39.5%;width:6.5%;height:8.5%;}
+#wordYeFromNai{left:22.6%;top:39.5%;width:6.5%;height:8.5%;}
+
+
+.word-speak-hit{z-index:20;}
+
+</style>
+</head>
+<body>
+<section id="home" class="screen active" aria-label="阅读乐园首页">
+  <div class="canvas">
+    <img src="images/image_01.jpg" alt="阅读乐园首页">
+    <button id="homeStart" class="hit" aria-label="开始学习"></button>
+  </div>
+</section>
+
+<section id="cover" class="screen" aria-label="第四册 我的家人 开始学习">
+  <div class="canvas">
+    <img src="images/image_02.png" alt="第四册 我的家人">
+    <button id="coverHome" class="hit" aria-label="返回首页"></button>
+    <button id="coverStart" class="hit" aria-label="开始学习"></button>
+  </div>
+</section>
+
+</section>
+
+<section id="menu" class="screen" aria-label="第四册 我的家人 学习内容">
+  <div class="canvas">
+    <img src="images/image_03.png" alt="第四册 我的家人 学习内容">
+    <button id="menuHome" class="hit" aria-label="返回首页"></button>
+    <button id="menuLesson1" class="hit" aria-label="1 认识生字"></button>
+  </div>
+</section>
+
+
+
+<section id="wordDetail" class="screen" aria-label="认识 这">
+  <div class="canvas">
+    <img src="images/image_04.jpg" alt="认识 这">
+    <button id="wordDetailBack" class="hit" aria-label="返回学习内容"></button>
+    <button id="wordJia" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromZhe" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromZhe" class="hit" aria-label="认识 爷"></button>
+    <button id="wordNaiFromZhe" class="hit" aria-label="认识 奶"></button>
+    <button id="wordPlayZhe" class="hit word-speak-hit" aria-label="播放 这"></button>
+    <button id="wordListenZhe" class="hit word-speak-hit" aria-label="听一听 这"></button>
+    <input id="wordSpeedZhe" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+  </div>
+</section>
+<section id="wordHome" class="screen" aria-label="认识 家">
+  <div class="canvas">
+    <img src="images/image_05.png" alt="认识 家">
+    <button id="wordHomeBack" class="hit" aria-label="返回上一页"></button>
+    <button id="wordZheFromJia" class="hit" aria-label="认识 这"></button>
+    <button id="wordRenFromJia" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromJia" class="hit" aria-label="认识 爷"></button>
+    <button id="wordNaiFromJia" class="hit" aria-label="认识 奶"></button>
+    <button id="wordPlayJia" class="hit word-speak-hit" aria-label="播放 家"></button>
+    <button id="wordListenJia" class="hit word-speak-hit" aria-label="听一听 家"></button>
+    <input id="wordSpeedJia" type="range" min="0.55" max="1.35" step="0.05" value="0.8" aria-label="调整语速">
+  </div>
+</section>
+
+<section id="wordRen" class="screen" aria-label="认识 人">
+  <div class="canvas">
+    <img src="images/image_06.png" alt="认识 人">
+    <button id="wordPlayRen" class="hit word-speak-hit" aria-label="播放 人"></button>
+    <button id="wordListenRen" class="hit word-speak-hit" aria-label="听一听 人"></button>
+    <input id="wordSpeedRen" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromRen" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromRen" class="hit" aria-label="认识 家"></button>
+    <button id="wordYeFromRen" class="hit" aria-label="认识 爷"></button>
+    <button id="wordNaiFromRen" class="hit" aria-label="认识 奶"></button>
+  </div>
+</section>
+
+
+
+<section id="wordYe" class="screen" aria-label="认识 爷">
+  <div class="canvas">
+    <img src="images/image_07.png" alt="认识 爷">
+    <button id="wordPlayYe" class="hit word-speak-hit" aria-label="播放 爷"></button>
+    <button id="wordListenYe" class="hit word-speak-hit" aria-label="听一听 爷"></button>
+    <input id="wordSpeedYe" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromYe" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromYe" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromYe" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromYe" class="hit" aria-label="认识 爷"></button>
+    <button id="wordNaiFromYe" class="hit" aria-label="认识 奶"></button>
+  </div>
+</section>
+
+<script>
+(function(){
+  const home=document.getElementById('home');
+  const cover=document.getElementById('cover');
+  const menu=document.getElementById('menu');
+  const wordDetail=document.getElementById('wordDetail');
+  const wordHome=document.getElementById('wordHome');
+  const wordRen=document.getElementById('wordRen');
+  const wordYe=document.getElementById('wordYe');
+
+  function show(screen){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    screen.classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  function showCover(){ show(cover); }
+  function showMenu(){ show(menu); }
+  function showHome(){ show(home); }
+  function showWordDetail(){ show(wordDetail); }
+  function showWordHome(){ show(wordHome); }
+  function showWordRen(){ show(wordRen); }
+  function showWordYe(){ show(wordYe); }
+  function showWordNai(){ show(wordNai); }
+
+  // 使用单一 pointerup 事件，避免 click + pointerup 重复触发。
+  function bindButton(id, action){
+    const el=document.getElementById(id);
+    if(!el) return;
+    let last=0;
+    el.addEventListener('pointerup', function(e){
+      e.preventDefault();
+      const now=Date.now();
+      if(now-last<300) return;
+      last=now;
+      action();
+    });
+    el.addEventListener('keydown', function(e){
+      if(e.key==='Enter' || e.key===' '){
+        e.preventDefault();
+        action();
+      }
+    });
+  }
+
+  bindButton('homeStart', showCover);
+  bindButton('coverStart', showMenu);
+  bindButton('coverHome', showHome);
+  bindButton('menuHome', showHome);
+  bindButton('menuLesson1', showWordDetail);
+
+  // 认识生字页左上角：明确返回网站首页。
+  bindButton('wordSelectHome', showHome);
+
+  // 1.1.1.1“这”字页左上角：返回上一页 1.1.1。
+  bindButton('wordThis', showWordDetail);
+  bindButton('wordDetailBack', showMenu);
+  // 1.1.1.1 点击“家” → 1.1.1.2 家字页面
+  bindButton('wordJia', showWordHome);
+  bindButton('wordRenFromZhe', showWordRen);
+  bindButton('wordYeFromZhe', showWordYe);
+  // 1.1.1.2 左上角返回 → 1.1.1.1
+  bindButton('wordHomeBack', showMenu);
+  bindButton('wordZheFromJia', showWordDetail);
+  bindButton('wordRenFromJia', showWordRen);
+  bindButton('wordYeFromJia', showWordYe);
+  // 1.1.1.3「人」页面与其他两个生字页面互通
+  bindButton('wordZheFromRen', showWordDetail);
+  bindButton('wordJiaFromRen', showWordHome);
+  bindButton('wordYeFromRen', showWordYe);
+  bindButton('wordZheFromYe', showWordDetail);
+  bindButton('wordJiaFromYe', showWordHome);
+  bindButton('wordRenFromYe', showWordRen);
+  bindButton('wordYeFromYe', showWordYe);
+  bindButton('wordNaiFromZhe', showWordNai);
+  bindButton('wordNaiFromJia', showWordNai);
+  bindButton('wordNaiFromRen', showWordNai);
+  bindButton('wordNaiFromYe', showWordNai);
+  bindButton('wordZheFromNai', showWordDetail);
+  bindButton('wordJiaFromNai', showWordHome);
+  bindButton('wordRenFromNai', showWordRen);
+  bindButton('wordYeFromNai', showWordYe);
+})();
+</script>
+
+<script>
+(function () {
+  let zheRate = 0.95;
+
+  function speakZhe() {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      alert("当前浏览器不支持语音朗读，请使用 Chrome 浏览器。");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance("这");
+    u.lang = "zh-CN";
+    u.rate = zheRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v =>
+      /^zh-CN$/i.test(v.lang) || /^zh/i.test(v.lang)
+    );
+    if (zhVoice) u.voice = zhVoice;
+
+    window.speechSynthesis.speak(u);
+  }
+
+
+  function bindSpeedDrag() {
+    const drag = document.getElementById("wordSpeedDrag");
+    const speed = document.getElementById("wordSpeedZhe");
+    if (!drag || !speed || drag.dataset.bound === "1") return;
+
+    drag.dataset.bound = "1";
+    let dragging = false;
+
+    function setFromPointer(clientX) {
+      const rect = drag.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const value = Math.round(ratio * 100) / 100;
+      speed.value = String(value);
+
+      // 直接更新语速和蓝点位置，确保视觉和实际语速同步。
+      zheRate = 0.55 + value * 0.8;
+
+      // 触发 input，让原有朗读逻辑保持一致。
+      speed.dispatchEvent(new Event("input", {bubbles:true}));
+    }
+
+    drag.addEventListener("pointerdown", function(e) {
+      e.preventDefault();
+      dragging = true;
+      if (drag.setPointerCapture) drag.setPointerCapture(e.pointerId);
+      setFromPointer(e.clientX);
+    });
+
+    drag.addEventListener("pointermove", function(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      setFromPointer(e.clientX);
+    });
+
+    function stop(e) {
+      if (!dragging) return;
+      dragging = false;
+      if (e && drag.releasePointerCapture) {
+        try { drag.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
+
+    drag.addEventListener("pointerup", stop);
+    drag.addEventListener("pointercancel", stop);
+    drag.addEventListener("lostpointercapture", function(){ dragging = false; });
+  }
+
+
+
+  function bindZheSpeech() {
+    const play = document.getElementById("wordPlayZhe");
+    const listen = document.getElementById("wordListenZhe");
+    const speed = document.getElementById("wordSpeedZhe");
+
+    if (play && play.dataset.bound !== "1") {
+      play.dataset.bound = "1";
+      play.addEventListener("pointerup", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakZhe();
+      });
+    }
+
+    if (listen && listen.dataset.bound !== "1") {
+      listen.dataset.bound = "1";
+      listen.addEventListener("pointerup", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakZhe();
+      });
+    }
+
+    if (speed) {
+      const v = parseFloat(speed.value) || 0.5;
+      speed.value = String(v);
+      zheRate = 0.55 + v * 0.8;
+    }
+
+    if (speed && speed.dataset.bound !== "1") {
+      speed.dataset.bound = "1";
+      speed.addEventListener("input", function () {
+        zheRate = 0.55 + (parseFloat(this.value) || 0.5) * 0.8;
+      });
+      speed.addEventListener("change", function () {
+        zheRate = 0.55 + (parseFloat(this.value) || 0.5) * 0.8;
+      });
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", function(){ bindZheSpeech(); bindSpeedDrag(); });
+  window.speechSynthesis && window.speechSynthesis.addEventListener &&
+    window.speechSynthesis.addEventListener("voiceschanged", bindZheSpeech);
+  setTimeout(function(){ bindZheSpeech(); bindSpeedDrag(); }, 300);
+  setTimeout(function(){ bindZheSpeech(); bindSpeedDrag(); }, 1000);
+})();
+</script>
+
+
+<script>
+(function () {
+  let jiaRate = 0.8;
+
+  function speakJia() {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance("家");
+    u.lang = "zh-CN";
+    u.rate = jiaRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    // 与 1.1.1.1「这」字使用完全相同的声线选择规则。
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v =>
+      /^zh-CN$/i.test(v.lang) || /^zh/i.test(v.lang)
+    );
+    if (zhVoice) u.voice = zhVoice;
+
+    window.speechSynthesis.speak(u);
+  }
+
+  function bindJiaSpeech() {
+    const play = document.getElementById("wordPlayJia");
+    const listen = document.getElementById("wordListenJia");
+    const speed = document.getElementById("wordSpeedJia");
+
+    if (play && play.dataset.jiaSpeechBound !== "1") {
+      play.dataset.jiaSpeechBound = "1";
+      play.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakJia();
+      });
+    }
+
+    if (listen && listen.dataset.jiaSpeechBound !== "1") {
+      listen.dataset.jiaSpeechBound = "1";
+      listen.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakJia();
+      });
+    }
+
+    if (speed && speed.dataset.jiaSpeedBound !== "1") {
+      speed.dataset.jiaSpeedBound = "1";
+      jiaRate = parseFloat(speed.value) || 0.8;
+      speed.addEventListener("input", function () {
+        jiaRate = parseFloat(this.value) || 0.8;
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", bindJiaSpeech);
+  setTimeout(bindJiaSpeech, 100);
+  setTimeout(bindJiaSpeech, 500);
+})();
+</script>
+
+<script>
+(function () {
+  let renRate = 0.95;
+
+  function speakRen() {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      alert("当前浏览器不支持语音朗读，请使用 Chrome 浏览器。");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance("人");
+    u.lang = "zh-CN";
+    u.rate = renRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v =>
+      /^zh-CN$/i.test(v.lang) || /^zh/i.test(v.lang)
+    );
+    if (zhVoice) u.voice = zhVoice;
+
+    window.speechSynthesis.speak(u);
+  }
+
+
+  function bindSpeedDrag() {
+    const drag = document.getElementById("wordSpeedDrag");
+    const speed = document.getElementById("wordSpeedRen");
+    if (!drag || !speed || drag.dataset.bound === "1") return;
+
+    drag.dataset.bound = "1";
+    let dragging = false;
+
+    function setFromPointer(clientX) {
+      const rect = drag.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const value = Math.round(ratio * 100) / 100;
+      speed.value = String(value);
+
+      // 直接更新语速和蓝点位置，确保视觉和实际语速同步。
+      renRate = 0.55 + value * 0.8;
+
+      // 触发 input，让原有朗读逻辑保持一致。
+      speed.dispatchEvent(new Event("input", {bubbles:true}));
+    }
+
+    drag.addEventListener("pointerdown", function(e) {
+      e.preventDefault();
+      dragging = true;
+      if (drag.setPointerCapture) drag.setPointerCapture(e.pointerId);
+      setFromPointer(e.clientX);
+    });
+
+    drag.addEventListener("pointermove", function(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      setFromPointer(e.clientX);
+    });
+
+    function stop(e) {
+      if (!dragging) return;
+      dragging = false;
+      if (e && drag.releasePointerCapture) {
+        try { drag.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
+
+    drag.addEventListener("pointerup", stop);
+    drag.addEventListener("pointercancel", stop);
+    drag.addEventListener("lostpointercapture", function(){ dragging = false; });
+  }
+
+
+
+  function bindRenSpeech() {
+    const play = document.getElementById("wordPlayRen");
+    const listen = document.getElementById("wordListenRen");
+    const speed = document.getElementById("wordSpeedRen");
+
+    if (play && play.dataset.bound !== "1") {
+      play.dataset.bound = "1";
+      play.addEventListener("pointerup", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakRen();
+      });
+    }
+
+    if (listen && listen.dataset.bound !== "1") {
+      listen.dataset.bound = "1";
+      listen.addEventListener("pointerup", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakRen();
+      });
+    }
+
+    if (speed) {
+      const v = parseFloat(speed.value) || 0.5;
+      speed.value = String(v);
+      renRate = 0.55 + v * 0.8;
+    }
+
+    if (speed && speed.dataset.bound !== "1") {
+      speed.dataset.bound = "1";
+      speed.addEventListener("input", function () {
+        renRate = 0.55 + (parseFloat(this.value) || 0.5) * 0.8;
+      });
+      speed.addEventListener("change", function () {
+        renRate = 0.55 + (parseFloat(this.value) || 0.5) * 0.8;
+      });
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", function(){ bindRenSpeech(); bindSpeedDrag(); });
+  window.speechSynthesis && window.speechSynthesis.addEventListener &&
+    window.speechSynthesis.addEventListener("voiceschanged", bindRenSpeech);
+  setTimeout(function(){ bindRenSpeech(); bindSpeedDrag(); }, 300);
+  setTimeout(function(){ bindRenSpeech(); bindSpeedDrag(); }, 1000);
+})();
+</script>
+
+<script>
+(function () {
+  let yeRate = 0.95;
+
+  function speakYe() {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      alert("当前浏览器不支持语音朗读，请使用 Chrome 浏览器。");
+      return;
+    }
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance("爷");
+    u.lang = "zh-CN";
+    u.rate = yeRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v =>
+      /^zh-CN$/i.test(v.lang) || /^zh/i.test(v.lang)
+    );
+    if (zhVoice) u.voice = zhVoice;
+
+    window.speechSynthesis.speak(u);
+  }
+
+  function bindYeSpeech() {
+    const play = document.getElementById("wordPlayYe");
+    const listen = document.getElementById("wordListenYe");
+    const speed = document.getElementById("wordSpeedYe");
+
+    if (play && play.dataset.bound !== "1") {
+      play.dataset.bound = "1";
+      play.addEventListener("pointerup", function (e) {
+        e.preventDefault(); e.stopPropagation(); speakYe();
+      });
+    }
+    if (listen && listen.dataset.bound !== "1") {
+      listen.dataset.bound = "1";
+      listen.addEventListener("pointerup", function (e) {
+        e.preventDefault(); e.stopPropagation(); speakYe();
+      });
+    }
+    if (speed) {
+      yeRate = 0.55 + (parseFloat(speed.value) || 0.5) * 0.8;
+      if (speed.dataset.bound !== "1") {
+        speed.dataset.bound = "1";
+        speed.addEventListener("input", function () {
+          yeRate = 0.55 + (parseFloat(this.value) || 0) * 0.8;
+        });
+        speed.addEventListener("change", function () {
+          yeRate = 0.55 + (parseFloat(this.value) || 0) * 0.8;
+        });
+      }
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", bindYeSpeech);
+  window.speechSynthesis && window.speechSynthesis.addEventListener &&
+    window.speechSynthesis.addEventListener("voiceschanged", bindYeSpeech);
+  setTimeout(bindYeSpeech, 300);
+  setTimeout(bindYeSpeech, 1000);
+})();
+</script>
+
+
+<section id="wordNai" class="screen" aria-label="认识 奶">
+  <div class="canvas">
+    <img src="images/image_08.png" alt="认识 奶">
+    <button id="wordPlayNai" class="hit word-speak-hit" aria-label="播放 奶"></button>
+    <button id="wordListenNai" class="hit word-speak-hit" aria-label="听一听 奶"></button>
+    <input id="wordSpeedNai" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromNai" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromNai" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromNai" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromNai" class="hit" aria-label="认识 爷"></button>
+  </div>
+</section>
+
+<section id="wordHe" class="screen" aria-label="认识 和">
+  <div class="canvas">
+    <img src="images/image_09.png" alt="认识 和">
+    <button id="wordPlayHe" class="hit word-speak-hit" aria-label="播放 和"></button>
+    <button id="wordListenHe" class="hit word-speak-hit" aria-label="听一听 和"></button>
+    <input id="wordSpeedHe" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromHe" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromHe" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromHe" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromHe" class="hit" aria-label="认识 爷"></button>
+  </div>
+</section>
+
+<section id="wordTou" class="screen" aria-label="认识 头">
+  <div class="canvas">
+    <img src="images/image_10.png" alt="认识 头">
+    <button id="wordPlayHe" class="hit word-speak-hit" aria-label="播放 和"></button>
+    <button id="wordListenHe" class="hit word-speak-hit" aria-label="听一听 和"></button>
+    <input id="wordSpeedHe" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromHe" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromHe" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromHe" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromHe" class="hit" aria-label="认识 爷"></button>
+  </div>
+</section>
+
+<section id="wordFa" class="screen" aria-label="认识 发">
+  <div class="canvas">
+    <img src="images/image_11.png" alt="认识 发">
+    <button id="wordPlayHe" class="hit word-speak-hit" aria-label="播放 和"></button>
+    <button id="wordListenHe" class="hit word-speak-hit" aria-label="听一听 和"></button>
+    <input id="wordSpeedHe" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="调整语速">
+    <button id="wordZheFromHe" class="hit" aria-label="认识 这"></button>
+    <button id="wordJiaFromHe" class="hit" aria-label="认识 家"></button>
+    <button id="wordRenFromHe" class="hit" aria-label="认识 人"></button>
+    <button id="wordYeFromHe" class="hit" aria-label="认识 爷"></button>
+  </div>
+</section>
+
+
+<script>
+(function(){
+  let naiRate = 0.95;
+
+  function speakNai(){
+    if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance("奶");
+    u.lang = "zh-CN";
+    u.rate = naiRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v => /^zh-CN$/i.test(v.lang) || /^zh/i.test(v.lang));
+    if(zhVoice) u.voice = zhVoice;
+    window.speechSynthesis.speak(u);
+  }
+
+  function bindNaiSpeech(){
+    const play=document.getElementById("wordPlayNai");
+    const listen=document.getElementById("wordListenNai");
+    const speed=document.getElementById("wordSpeedNai");
+
+    if(play && play.dataset.bound!=="1"){
+      play.dataset.bound="1";
+      play.addEventListener("pointerup",e=>{
+        e.preventDefault(); e.stopPropagation(); speakNai();
+      });
+    }
+    if(listen && listen.dataset.bound!=="1"){
+      listen.dataset.bound="1";
+      listen.addEventListener("pointerup",e=>{
+        e.preventDefault(); e.stopPropagation(); speakNai();
+      });
+    }
+    if(speed){
+      naiRate=0.55+(parseFloat(speed.value)||0.5)*0.8;
+      if(speed.dataset.bound!=="1"){
+        speed.dataset.bound="1";
+        speed.addEventListener("input",function(){
+          naiRate=0.55+(parseFloat(this.value)||0)*0.8;
+        });
+        speed.addEventListener("change",function(){
+          naiRate=0.55+(parseFloat(this.value)||0)*0.8;
+        });
+      }
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded",bindNaiSpeech);
+  if(window.speechSynthesis && window.speechSynthesis.addEventListener){
+    window.speechSynthesis.addEventListener("voiceschanged",bindNaiSpeech);
+  }
+  setTimeout(bindNaiSpeech,300);
+  setTimeout(bindNaiSpeech,1000);
+})();
+</script>
+
+
+<style id="fiveWordNetworkStyle">
+.five-word-network-hit{
+  position:absolute;
+  z-index:260;
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+</style>
+
+
+<script id="fiveWordNetworkScript">
+(function(){
+  function showId(id){
+    const el=document.getElementById(id);
+    if(!el) return;
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    el.classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  // 五个页面的真实 ID
+  const pages = ['wordDetail','wordHome','wordRen','wordYe','wordNai'];
+
+  // 左侧生字表位置（相对于 1536×1024 画布）
+  const pos = {
+    zhe:{left:4.5, top:39.5, width:7.5, height:8.5},
+    jia:{left:9.0, top:39.5, width:6.5, height:8.5},
+    ren:{left:15.0, top:39.5, width:6.5, height:8.5},
+    ye:{left:22.6, top:39.5, width:6.5, height:8.5},
+    nai:{left:4.5, top:50.0, width:6.5, height:8.5}
+  };
+
+  const target = {
+    zhe:'wordDetail',
+    jia:'wordHome',
+    ren:'wordRen',
+    ye:'wordYe',
+    nai:'wordNai'
+  };
+
+  const keyToChar = {zhe:'这',jia:'家',ren:'人',ye:'爷',nai:'奶'};
+
+  // 保证每个生字页面都存在另外四个字的点击区域。
+  function ensureButtons(){
+    pages.forEach(pageId=>{
+      const page=document.getElementById(pageId);
+      if(!page) return;
+      const canvas=page.querySelector('.canvas');
+      if(!canvas) return;
+
+      Object.keys(target).forEach(key=>{
+        const id='fiveWord_'+pageId+'_'+key;
+        if(document.getElementById(id)) return;
+
+        const p=pos[key];
+        const b=document.createElement('button');
+        b.id=id;
+        b.type='button';
+        b.className='five-word-network-hit';
+        b.setAttribute('aria-label','认识 '+keyToChar[key]);
+        b.style.left=p.left+'%';
+        b.style.top=p.top+'%';
+        b.style.width=p.width+'%';
+        b.style.height=p.height+'%';
+        b.addEventListener('pointerup',function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          showId(target[key]);
+        });
+        canvas.appendChild(b);
+      });
+    });
+  }
+
+  // 捕获阶段统一接管五个生字的既有按钮，避免旧版本绑定关系不完整。
+  const route = {
+    wordZheFromJia:'wordDetail',
+    wordZheFromRen:'wordDetail',
+    wordZheFromYe:'wordDetail',
+    wordZheFromNai:'wordDetail',
+
+    wordJia:'wordHome',
+    wordJiaFromRen:'wordHome',
+    wordJiaFromYe:'wordHome',
+    wordJiaFromNai:'wordHome',
+
+    wordRenFromZhe:'wordRen',
+    wordRenFromJia:'wordRen',
+    wordRenFromYe:'wordRen',
+    wordRenFromNai:'wordRen',
+
+    wordYeFromZhe:'wordYe',
+    wordYeFromJia:'wordYe',
+    wordYeFromRen:'wordYe',
+    wordYeFromNai:'wordYe',
+
+    wordNaiFromZhe:'wordNai',
+    wordNaiFromJia:'wordNai',
+    wordNaiFromRen:'wordNai',
+    wordNaiFromYe:'wordNai'
+  };
+
+  function install(){
+    ensureButtons();
+
+    Object.keys(route).forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el || el.dataset.fiveNetworkBound==='1') return;
+      el.dataset.fiveNetworkBound='1';
+      el.addEventListener('pointerup',function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        showId(route[id]);
+      }, true);
+      el.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        showId(route[id]);
+      }, true);
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded',install);
+  setTimeout(install,100);
+  setTimeout(install,500);
+  setTimeout(install,1200);
+})();
+</script>
+
+
+<script>
+(function(){
+let heRate=0.95;
+function speakHe(){
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance("和");u.lang="zh-CN";u.rate=heRate;u.pitch=1;u.volume=1;
+ const v=speechSynthesis.getVoices().find(x=>/^zh-CN$/i.test(x.lang)||/^zh/i.test(x.lang));
+ if(v)u.voice=v;speechSynthesis.speak(u);
+}
+function bind(){
+ const p=document.getElementById("wordPlayHe"),l=document.getElementById("wordListenHe"),s=document.getElementById("wordSpeedHe");
+ if(p&&!p.dataset.he){p.dataset.he=1;p.addEventListener("pointerup",e=>{e.preventDefault();e.stopPropagation();speakHe();});}
+ if(l&&!l.dataset.he){l.dataset.he=1;l.addEventListener("pointerup",e=>{e.preventDefault();e.stopPropagation();speakHe();});}
+ if(s&&!s.dataset.he){
+  s.dataset.he=1;s.addEventListener("input",()=>heRate=.55+Number(s.value)*.8);
+  let d=false;
+  const set=x=>{const r=s.getBoundingClientRect();s.value=Math.max(0,Math.min(1,(x-r.left)/r.width));s.dispatchEvent(new Event("input",{bubbles:true}));};
+  s.addEventListener("pointerdown",e=>{e.preventDefault();d=true;s.setPointerCapture?.(e.pointerId);set(e.clientX);});
+  s.addEventListener("pointermove",e=>{if(d){e.preventDefault();set(e.clientX);}});
+  s.addEventListener("pointerup",()=>d=false);s.addEventListener("pointercancel",()=>d=false);
+ }
+}
+addEventListener("DOMContentLoaded",bind);setTimeout(bind,200);setTimeout(bind,800);
+})();
+</script>
+
+<script>
+(function(){
+function show(id){const e=document.getElementById(id);if(!e)return;document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));e.classList.add("active");scrollTo(0,0);}
+const pages=["wordDetail","wordHome","wordRen","wordYe","wordNai","wordHe"];
+const target={zhe:"wordDetail",jia:"wordHome",ren:"wordRen",ye:"wordYe",nai:"wordNai",he:"wordHe"};
+const pos={zhe:[4.5,39.5,7.5,8.5],jia:[9,39.5,6.5,8.5],ren:[15,39.5,6.5,8.5],ye:[22.6,39.5,6.5,8.5],nai:[4.5,50,6.5,8.5],he:[27,39.5,6.5,8.5]};
+function setup(){
+ pages.forEach(page=>{
+  const c=document.querySelector("#"+page+" .canvas");if(!c)return;
+  Object.keys(target).forEach(k=>{
+   if(c.querySelector('[data-six="'+k+'"]'))return;
+   const p=pos[k],b=document.createElement("button");b.type="button";b.dataset.six=k;
+   b.style.cssText=`position:absolute;left:${p[0]}%;top:${p[1]}%;width:${p[2]}%;height:${p[3]}%;z-index:500;background:transparent;border:0;padding:0;cursor:pointer;`;
+   b.addEventListener("pointerup",e=>{e.preventDefault();e.stopImmediatePropagation();show(target[k]);},true);c.appendChild(b);
+  });
+  if(page==="wordHe"&&!c.dataset.heback){
+   c.dataset.heback=1;const b=document.createElement("button");b.type="button";
+   b.style.cssText="position:absolute;left:1%;top:2%;width:13%;height:10%;z-index:501;background:transparent;border:0;cursor:pointer;";
+   b.addEventListener("pointerup",e=>{e.preventDefault();e.stopImmediatePropagation();show("menu");},true);c.appendChild(b);
+  }
+ });
+}
+addEventListener("DOMContentLoaded",setup);setTimeout(setup,300);setTimeout(setup,1000);
+})();
+</script>
+
+
+<script id="fixHeLeftClick">
+(function(){
+  function showHe(){
+    var page=document.getElementById("wordHe");
+    if(!page)return;
+    document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+    page.classList.add("active");
+    window.scrollTo(0,0);
+  }
+  function bind(){
+    ["wordDetail","wordHome","wordRen","wordYe","wordNai"].forEach(function(id){
+      var canvas=document.querySelector("#"+id+" .canvas");
+      if(!canvas || canvas.querySelector('[data-fix-he="1"]'))return;
+
+      var b=document.createElement("button");
+      b.type="button";
+      b.dataset.fixHe="1";
+      b.setAttribute("aria-label","认识 和");
+      b.style.cssText=
+        "position:absolute;left:9%;top:50%;width:6.5%;height:8.5%;" +
+        "z-index:99999;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+
+      b.addEventListener("pointerup",function(e){
+        e.preventDefault();e.stopImmediatePropagation();showHe();
+      },true);
+      b.addEventListener("click",function(e){
+        e.preventDefault();e.stopImmediatePropagation();showHe();
+      },true);
+      canvas.appendChild(b);
+    });
+  }
+  window.addEventListener("DOMContentLoaded",bind);
+  setTimeout(bind,100);
+  setTimeout(bind,500);
+  setTimeout(bind,1200);
+})();
+</script>
+
+
+<script id="heAudioFix">
+(function(){
+  var heRate = 0.95;
+
+  function speakHe(){
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance("和");
+    u.lang = "zh-CN";
+    u.rate = heRate;
+    u.pitch = 1;
+    u.volume = 1;
+
+    var voices = window.speechSynthesis.getVoices();
+    var v = voices.find(function(x){return x.lang === "zh-CN";}) ||
+            voices.find(function(x){return /^zh-CN/i.test(x.lang);}) ||
+            voices.find(function(x){return /^zh/i.test(x.lang);});
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }
+
+  function makeButton(canvas,id,left,top,width,height,action){
+    if(document.getElementById(id)) return;
+    var b=document.createElement("button");
+    b.id=id; b.type="button";
+    b.style.cssText="position:absolute;left:"+left+"%;top:"+top+"%;width:"+width+"%;height:"+height+"%;z-index:100000;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+    b.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();action();},true);
+    b.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();action();},true);
+    canvas.appendChild(b);
+  }
+
+  function bind(){
+    var page=document.getElementById("wordHe");
+    if(!page) return;
+    var canvas=page.querySelector(".canvas");
+    if(!canvas) return;
+
+    makeButton(canvas,"hePlayFix",51,19.5,8.5,10,speakHe);
+    makeButton(canvas,"heListenFix",39,83,20,12,speakHe);
+
+    if(!document.getElementById("heSpeedFix")){
+      var speed=document.createElement("input");
+      speed.id="heSpeedFix";
+      speed.type="range";
+      speed.min="0"; speed.max="1"; speed.step="0.01"; speed.value="0.5";
+      speed.setAttribute("aria-label","和的语速");
+      speed.style.cssText="position:absolute;left:43%;top:74.5%;width:30%;height:8%;opacity:0;z-index:100001;cursor:ew-resize;";
+      speed.addEventListener("input",function(){heRate=0.55+Number(speed.value)*0.8;});
+      canvas.appendChild(speed);
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded",bind);
+  setTimeout(bind,100);
+  setTimeout(bind,500);
+  setTimeout(bind,1200);
+})();
+</script>
+
+
+<script id="heVisibleSpeedDot">
+(function(){
+  function setup(){
+    var page=document.getElementById("wordHe");
+    if(!page)return;
+    var canvas=page.querySelector(".canvas");
+    var range=document.getElementById("heSpeedFix");
+    if(!canvas || !range)return;
+    if(document.getElementById("heBlueDot"))return;
+
+    var dot=document.createElement("div");
+    dot.id="heBlueDot";
+    dot.setAttribute("aria-label","拖动调整语速");
+    dot.style.cssText=
+      "position:absolute;" +
+      "left:57.25%;" +
+      "top:74.2%;" +
+      "width:38px;" +
+      "height:38px;" +
+      "border-radius:50%;" +
+      "background:#1789f5;" +
+      "border:3px solid #0b75e8;" +
+      "box-shadow:0 2px 5px rgba(0,0,0,.25);" +
+      "z-index:100002;" +
+      "cursor:grab;" +
+      "touch-action:none;" +
+      "box-sizing:border-box;";
+
+    canvas.appendChild(dot);
+
+    function updateDot(){
+      var value=Number(range.value);
+      dot.style.left=(43.5 + value*27.5 - 1.7)+"%";
+    }
+
+    range.addEventListener("input",updateDot);
+
+    var dragging=false;
+
+    function setByX(x){
+      var rect=range.getBoundingClientRect();
+      var value=(x-rect.left)/rect.width;
+      value=Math.max(0,Math.min(1,value));
+      range.value=value;
+      range.dispatchEvent(new Event("input",{bubbles:true}));
+      updateDot();
+    }
+
+    dot.addEventListener("pointerdown",function(e){
+      e.preventDefault();
+      dragging=true;
+      dot.style.cursor="grabbing";
+      if(dot.setPointerCapture)dot.setPointerCapture(e.pointerId);
+    });
+
+    dot.addEventListener("pointermove",function(e){
+      if(!dragging)return;
+      e.preventDefault();
+      setByX(e.clientX);
+    });
+
+    function stop(e){
+      dragging=false;
+      dot.style.cursor="grab";
+      if(e && dot.releasePointerCapture){
+        try{dot.releasePointerCapture(e.pointerId);}catch(_){}
+      }
+    }
+
+    dot.addEventListener("pointerup",stop);
+    dot.addEventListener("pointercancel",stop);
+    dot.addEventListener("lostpointercapture",function(){dragging=false;dot.style.cursor="grab";});
+
+    // 点击整条语速线也能移动蓝点
+    range.style.pointerEvents="auto";
+    range.style.cursor="ew-resize";
+    range.style.opacity="0";
+
+    updateDot();
+  }
+
+  window.addEventListener("DOMContentLoaded",setup);
+  setTimeout(setup,100);
+  setTimeout(setup,500);
+  setTimeout(setup,1200);
+})();
+</script>
+
+
+<script id="touAudioFix">
+(function(){
+  var touRate=0.95;
+  function speakTou(){
+    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance("头");
+    u.lang="zh-CN";u.rate=touRate;u.pitch=1;u.volume=1;
+    var vs=window.speechSynthesis.getVoices();
+    var v=vs.find(function(x){return x.lang==="zh-CN";})||vs.find(function(x){return /^zh-CN/i.test(x.lang);})||vs.find(function(x){return /^zh/i.test(x.lang);});
+    if(v)u.voice=v;
+    window.speechSynthesis.speak(u);
+  }
+  function makeButton(canvas,id,left,top,width,height,fn){
+    if(document.getElementById(id))return;
+    var b=document.createElement("button");b.id=id;b.type="button";
+    b.style.cssText="position:absolute;left:"+left+"%;top:"+top+"%;width:"+width+"%;height:"+height+"%;z-index:100000;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+    b.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();fn();},true);
+    b.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();fn();},true);
+    canvas.appendChild(b);
+  }
+  function bind(){
+    var page=document.getElementById("wordTou");if(!page)return;
+    var canvas=page.querySelector(".canvas");if(!canvas)return;
+    makeButton(canvas,"touPlayFix",51,19.5,8.5,10,speakTou);
+    makeButton(canvas,"touListenFix",39,83,20,12,speakTou);
+    if(!document.getElementById("touSpeedFix")){
+      var speed=document.createElement("input");
+      speed.id="touSpeedFix";speed.type="range";speed.min="0";speed.max="1";speed.step="0.01";speed.value="0.5";
+      speed.setAttribute("aria-label","头的语速");
+      speed.style.cssText="position:absolute;left:43.5%;top:73.8%;width:27.5%;height:7%;opacity:0;z-index:100001;cursor:ew-resize;";
+      speed.addEventListener("input",function(){touRate=0.55+Number(speed.value)*0.8;});
+      canvas.appendChild(speed);
+    }
+  }
+  window.addEventListener("DOMContentLoaded",bind);setTimeout(bind,100);setTimeout(bind,500);setTimeout(bind,1200);
+})();
+</script>
+
+<script id="touVisibleSpeedDot">
+(function(){
+  function setup(){
+    var page=document.getElementById("wordTou");if(!page)return;
+    var canvas=page.querySelector(".canvas"),range=document.getElementById("touSpeedFix");
+    if(!canvas||!range||document.getElementById("touBlueDot"))return;
+    var dot=document.createElement("div");dot.id="touBlueDot";dot.setAttribute("aria-label","拖动调整语速");
+    dot.style.cssText="position:absolute;left:57.25%;top:74.2%;width:38px;height:38px;border-radius:50%;border:3px solid #0b75e8;background:#1789f5;box-shadow:0 2px 5px rgba(0,0,0,.25);z-index:100002;cursor:grab;touch-action:none;box-sizing:border-box;";
+    canvas.appendChild(dot);
+    function updateDot(){var value=Number(range.value);dot.style.left=(43.5+value*27.5-1.7)+"%";}
+    range.addEventListener("input",updateDot);
+    var dragging=false;
+    function setByX(x){var r=range.getBoundingClientRect(),v=(x-r.left)/r.width;v=Math.max(0,Math.min(1,v));range.value=v;range.dispatchEvent(new Event("input",{bubbles:true}));updateDot();}
+    dot.addEventListener("pointerdown",function(e){e.preventDefault();dragging=true;dot.style.cursor="grabbing";if(dot.setPointerCapture)dot.setPointerCapture(e.pointerId);});
+    dot.addEventListener("pointermove",function(e){if(!dragging)return;e.preventDefault();setByX(e.clientX);});
+    function stop(e){dragging=false;dot.style.cursor="grab";if(e&&dot.releasePointerCapture){try{dot.releasePointerCapture(e.pointerId);}catch(_){} }}
+    dot.addEventListener("pointerup",stop);dot.addEventListener("pointercancel",stop);dot.addEventListener("lostpointercapture",function(){dragging=false;dot.style.cursor="grab";});
+    range.style.pointerEvents="auto";range.style.cursor="ew-resize";range.style.opacity="0";updateDot();
+  }
+  window.addEventListener("DOMContentLoaded",setup);setTimeout(setup,100);setTimeout(setup,500);setTimeout(setup,1200);
+})();
+</script>
+
+<script id="sevenWordNetwork">
+(function(){
+  function show(id){var e=document.getElementById(id);if(!e)return;document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});e.classList.add("active");window.scrollTo(0,0);}
+  var pages=["wordDetail","wordHome","wordRen","wordYe","wordNai","wordHe","wordTou"];
+  var target={zhe:"wordDetail",jia:"wordHome",ren:"wordRen",ye:"wordYe",nai:"wordNai",he:"wordHe",tou:"wordTou"};
+  var pos={zhe:[4.5,39.5,7.5,8.5],jia:[9,39.5,6.5,8.5],ren:[15,39.5,6.5,8.5],ye:[22.6,39.5,6.5,8.5],nai:[4.5,50,6.5,8.5],he:[9,50,6.5,8.5],tou:[15,50,6.5,8.5]};
+  function setup(){
+    pages.forEach(function(page){
+      var c=document.querySelector("#"+page+" .canvas");if(!c)return;
+      Object.keys(target).forEach(function(k){
+        if(c.querySelector('[data-seven="'+k+'"]'))return;
+        var p=pos[k],b=document.createElement("button");b.type="button";b.dataset.seven=k;
+        b.style.cssText="position:absolute;left:"+p[0]+"%;top:"+p[1]+"%;width:"+p[2]+"%;height:"+p[3]+"%;z-index:99999;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+        b.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();show(target[k]);},true);
+        b.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();show(target[k]);},true);
+        c.appendChild(b);
+      });
+      if(page==="wordTou"&&!c.dataset.touBack){
+        c.dataset.touBack="1";
+        var back=document.createElement("button");back.type="button";
+        back.style.cssText="position:absolute;left:1%;top:2%;width:13%;height:10%;z-index:100000;background:transparent;border:0;cursor:pointer;";
+        back.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();show("menu");},true);
+        c.appendChild(back);
+      }
+    });
+  }
+  window.addEventListener("DOMContentLoaded",setup);setTimeout(setup,100);setTimeout(setup,500);setTimeout(setup,1200);
+})();
+</script>
+
+
+<script id="faAudioFix">
+(function(){
+  var faRate=0.95;
+  function speakFa(){
+    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance("发");
+    u.lang="zh-CN";u.rate=faRate;u.pitch=1;u.volume=1;
+    var vs=window.speechSynthesis.getVoices();
+    var v=vs.find(function(x){return x.lang==="zh-CN";})||vs.find(function(x){return /^zh-CN/i.test(x.lang);})||vs.find(function(x){return /^zh/i.test(x.lang);});
+    if(v)u.voice=v;
+    window.speechSynthesis.speak(u);
+  }
+  function makeButton(canvas,id,left,top,width,height,fn){
+    if(document.getElementById(id))return;
+    var b=document.createElement("button");b.id=id;b.type="button";
+    b.style.cssText="position:absolute;left:"+left+"%;top:"+top+"%;width:"+width+"%;height:"+height+"%;z-index:100000;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+    b.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();fn();},true);
+    b.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();fn();},true);
+    canvas.appendChild(b);
+  }
+  function bind(){
+    var page=document.getElementById("wordFa");if(!page)return;
+    var canvas=page.querySelector(".canvas");if(!canvas)return;
+    makeButton(canvas,"faPlayFix",51,19.5,8.5,10,speakFa);
+    makeButton(canvas,"faListenFix",39,83,20,12,speakFa);
+    if(!document.getElementById("faSpeedFix")){
+      var speed=document.createElement("input");
+      speed.id="faSpeedFix";speed.type="range";speed.min="0";speed.max="1";speed.step="0.01";speed.value="0.5";
+      speed.style.cssText="position:absolute;left:43.5%;top:73.8%;width:27.5%;height:7%;opacity:0;z-index:100001;cursor:ew-resize;";
+      speed.addEventListener("input",function(){faRate=0.55+Number(speed.value)*0.8;});
+      canvas.appendChild(speed);
+    }
+  }
+  window.addEventListener("DOMContentLoaded",bind);
+  setTimeout(bind,100);setTimeout(bind,500);setTimeout(bind,1200);
+})();
+</script>
+
+<script id="faVisibleSpeedDot">
+(function(){
+  function setup(){
+    var page=document.getElementById("wordFa");if(!page)return;
+    var canvas=page.querySelector(".canvas"),range=document.getElementById("faSpeedFix");
+    if(!canvas||!range||document.getElementById("faBlueDot"))return;
+    var dot=document.createElement("div");dot.id="faBlueDot";dot.setAttribute("aria-label","拖动调整语速");
+    dot.style.cssText="position:absolute;left:57.25%;top:74.2%;width:38px;height:38px;border-radius:50%;border:3px solid #0b75e8;background:#1789f5;box-shadow:0 2px 5px rgba(0,0,0,.25);z-index:100002;cursor:grab;touch-action:none;box-sizing:border-box;";
+    canvas.appendChild(dot);
+    function updateDot(){var value=Number(range.value);dot.style.left=(43.5+value*27.5-1.7)+"%";}
+    range.addEventListener("input",updateDot);
+    var dragging=false;
+    function setByX(x){var r=range.getBoundingClientRect(),v=(x-r.left)/r.width;v=Math.max(0,Math.min(1,v));range.value=v;range.dispatchEvent(new Event("input",{bubbles:true}));updateDot();}
+    dot.addEventListener("pointerdown",function(e){e.preventDefault();dragging=true;dot.style.cursor="grabbing";if(dot.setPointerCapture)dot.setPointerCapture(e.pointerId);});
+    dot.addEventListener("pointermove",function(e){if(!dragging)return;e.preventDefault();setByX(e.clientX);});
+    function stop(e){dragging=false;dot.style.cursor="grab";if(e&&dot.releasePointerCapture){try{dot.releasePointerCapture(e.pointerId);}catch(_){} }}
+    dot.addEventListener("pointerup",stop);dot.addEventListener("pointercancel",stop);
+    dot.addEventListener("lostpointercapture",function(){dragging=false;dot.style.cursor="grab";});
+    range.style.pointerEvents="auto";range.style.cursor="ew-resize";range.style.opacity="0";updateDot();
+  }
+  window.addEventListener("DOMContentLoaded",setup);setTimeout(setup,100);setTimeout(setup,500);setTimeout(setup,1200);
+})();
+</script>
+
+<script id="eightWordNetwork">
+(function(){
+  function show(id){var e=document.getElementById(id);if(!e)return;document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});e.classList.add("active");window.scrollTo(0,0);}
+  var pages=["wordDetail","wordHome","wordRen","wordYe","wordNai","wordHe","wordTou","wordFa"];
+  var target={zhe:"wordDetail",jia:"wordHome",ren:"wordRen",ye:"wordYe",nai:"wordNai",he:"wordHe",tou:"wordTou",fa:"wordFa"};
+  var pos={zhe:[4.5,39.5,7.5,8.5],jia:[9,39.5,6.5,8.5],ren:[15,39.5,6.5,8.5],ye:[22.6,39.5,6.5,8.5],nai:[4.5,50,6.5,8.5],he:[9,50,6.5,8.5],tou:[15,50,6.5,8.5],fa:[22.6,50,6.5,8.5]};
+  function setup(){
+    pages.forEach(function(page){
+      var c=document.querySelector("#"+page+" .canvas");if(!c)return;
+      Object.keys(target).forEach(function(k){
+        if(c.querySelector('[data-eight="'+k+'"]'))return;
+        var p=pos[k],b=document.createElement("button");b.type="button";b.dataset.eight=k;
+        b.style.cssText="position:absolute;left:"+p[0]+"%;top:"+p[1]+"%;width:"+p[2]+"%;height:"+p[3]+"%;z-index:99999;background:transparent;border:0;padding:0;margin:0;cursor:pointer;";
+        b.addEventListener("pointerup",function(e){e.preventDefault();e.stopImmediatePropagation();show(target[k]);},true);
+        b.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();show(target[k]);},true);
+        c.appendChild(b);
+      });
+    });
+  }
+  window.addEventListener("DOMContentLoaded",setup);setTimeout(setup,100);setTimeout(setup,500);setTimeout(setup,1200);
+})();
+</script>
+
+</body>
+</html>
